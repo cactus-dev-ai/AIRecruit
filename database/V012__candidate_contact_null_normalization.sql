@@ -1,0 +1,40 @@
+/* RecruitAI V012 - normalize blank candidate contacts to NULL
+   SQL Server 2008 R2 / compatibility level 100 */
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+
+BEGIN TRY
+BEGIN TRANSACTION;
+
+UPDATE dbo.Candidate
+SET Phone=NULL,UpdateTime=SYSUTCDATETIME()
+WHERE Phone IS NOT NULL AND LTRIM(RTRIM(Phone))=N'';
+
+UPDATE dbo.Candidate
+SET PhoneNormalized=NULL,UpdateTime=SYSUTCDATETIME()
+WHERE PhoneNormalized IS NOT NULL AND LTRIM(RTRIM(PhoneNormalized))='';
+
+UPDATE dbo.Candidate
+SET Email=NULL,UpdateTime=SYSUTCDATETIME()
+WHERE Email IS NOT NULL AND LTRIM(RTRIM(Email))=N'';
+
+UPDATE dbo.Candidate
+SET EmailNormalized=NULL,UpdateTime=SYSUTCDATETIME()
+WHERE EmailNormalized IS NOT NULL AND LTRIM(RTRIM(EmailNormalized))='';
+
+COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+ IF XACT_STATE()<>0 ROLLBACK TRANSACTION;
+ DECLARE @ErrorMessage NVARCHAR(4000),@ErrorSeverity INT,@ErrorState INT;
+ SELECT @ErrorMessage=ERROR_MESSAGE(),@ErrorSeverity=ERROR_SEVERITY(),@ErrorState=ERROR_STATE();
+ RAISERROR(@ErrorMessage,@ErrorSeverity,@ErrorState);
+END CATCH;
+GO

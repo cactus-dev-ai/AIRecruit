@@ -1,0 +1,10 @@
+@{ ViewData["Title"] = "用户管理"; }
+<div class="page-head"><div><h1>用户管理</h1><p>创建HR或管理员账号；登录失败不会锁定账号。</p></div></div>
+<form id="create" class="panel"><label>用户名<input name="userName" required maxlength="100"></label><label>显示名<input name="displayName" required maxlength="200"></label><label>角色<select name="role"><option>HR</option><option>ADMIN</option></select></label><label>初始密码<input name="password" type="password" required minlength="8"></label><button>创建</button></form>
+<div id="message" class="notice" hidden></div><table><thead><tr><th>用户名</th><th>显示名</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody id="rows"></tbody></table>
+@section Scripts {<script>
+const msg=document.getElementById('message');function show(t){msg.textContent=t;msg.hidden=false}
+async function load(){const d=await api('/api/admin/users');document.getElementById('rows').innerHTML=d.map(x=>`<tr><td>${h(x.userName)}</td><td>${h(x.displayName)}</td><td>${x.role}</td><td>${x.status}</td><td><button onclick="status(${x.id},'${x.status==='ACTIVE'?'disable':'enable'}')">${x.status==='ACTIVE'?'禁用':'启用'}</button> <button onclick="resetPassword(${x.id})">重置密码</button></td></tr>`).join('')}
+document.getElementById('create').onsubmit=async e=>{e.preventDefault();const body=Object.fromEntries(new FormData(e.target).entries());body.email=null;try{await api('/api/admin/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});e.target.reset();show('用户已创建。');await load()}catch(x){show(x.message)}};
+async function status(id,action){try{await api(`/api/admin/users/${id}/${action}`,{method:'POST'});await load()}catch(x){show(x.message)}}async function resetPassword(id){const newPassword=prompt('新密码（8-64位，包含字母和数字）');if(!newPassword)return;try{await api(`/api/admin/users/${id}/reset-password`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({newPassword})});show('密码已重置。')}catch(x){show(x.message)}}function h(v){const d=document.createElement('div');d.textContent=v;return d.innerHTML}load().catch(x=>show(x.message));
+</script>}

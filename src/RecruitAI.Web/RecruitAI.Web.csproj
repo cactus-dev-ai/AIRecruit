@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RecruitAI.Application\RecruitAI.Application.csproj" />
+    <ProjectReference Include="..\RecruitAI.Infrastructure\RecruitAI.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
+    <Content Include="..\..\database\V002__web_import_review_knowledge.sql" Link="database\V002__web_import_review_knowledge.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\database\V003__resume_json_import.sql" Link="database\V003__resume_json_import.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\database\V004__external_job_source_mapping.sql" Link="database\V004__external_job_source_mapping.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\database\V008__ai_task_knowledge_score_management.sql" Link="database\V008__ai_task_knowledge_score_management.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\database\V009__job_scoring_experience_context.sql" Link="database\V009__job_scoring_experience_context.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\database\V010__job_profile_management.sql" Link="database\V010__job_profile_management.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\database\V013__ai_voice_interview_mini_program.sql" Link="database\V013__ai_voice_interview_mini_program.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\database\V014__scoring_run_history.sql" Link="database\V014__scoring_run_history.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\database\V015__interview_invitation_delivery.sql" Link="database\V015__interview_invitation_delivery.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\database\V016__interview_delete_and_report_submission.sql" Link="database\V016__interview_delete_and_report_submission.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\database\V017__manual_resume_import.sql" Link="database\V017__manual_resume_import.sql" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\database\README.md" Link="database\README.md" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

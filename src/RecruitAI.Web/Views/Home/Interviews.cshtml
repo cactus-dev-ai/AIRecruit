@@ -1,0 +1,25 @@
+@{ ViewData["Title"]="AI语音面试"; }
+<div class="page-head">
+  <div><h1>AI语音面试</h1><p class="muted">HR 管理端。候选人实际面试仅通过微信小程序进入。</p></div>
+  <div class="actions"><a class="button secondary" href="/interviews/plans">面试方案</a><a class="button" href="/favorites">从简历收藏发起</a></div>
+</div>
+<form id="filters" class="panel interview-filters">
+  <label>姓名或岗位<input name="keyword" maxlength="100" placeholder="输入关键字"></label>
+  <label>状态<select name="status"><option value="">全部</option><option value="CREATED">已创建邀请</option><option value="NOTIFIED">已通知</option><option value="OPENED">已打开</option><option value="VERIFIED">已验证</option><option value="BOUND">已绑定</option><option value="REVOKED">已撤销</option><option value="EXPIRED">已过期</option><option value="IN_PROGRESS">面试中</option><option value="PROCESSING">报告生成中</option><option value="COMPLETED">已完成</option><option value="REVIEW_REQUIRED">待人工复核</option></select></label>
+  <button>查询</button>
+</form>
+<div id="message" class="notice" hidden></div>
+<div class="interview-stats"><div><strong id="total">0</strong><span>邀请总数</span></div><div><strong id="active">0</strong><span>当前页进行中</span></div><div><strong id="review">0</strong><span>当前页待复核</span></div></div>
+<div id="list"></div><div id="pager" class="pager"></div>
+
+@section Scripts{<script>
+let page=1,lastItems=[];const msg=document.getElementById('message');
+const h=v=>{const d=document.createElement('div');d.textContent=v??'';return d.innerHTML};
+const fmt=v=>v?new Date(v).toLocaleString('zh-CN'):'—';
+const statusText={DRAFT:'待HR审议',CONFIRMED:'已发布题集',CREATED:'已创建邀请',NOTIFIED:'已通知',OPENED:'已打开',VERIFIED:'已验证',BOUND:'已绑定',REVOKED:'已撤销',EXPIRED:'已过期',NOT_STARTED:'未开始',IN_PROGRESS:'面试中',PAUSED:'已暂停',PROCESSING:'报告生成中',COMPLETED:'已完成',REVIEW_REQUIRED:'待人工复核',ABORTED:'已终止'};function label(v){return `<span class="status status-${h((v||'none').toLowerCase())}">${h(statusText[v]||v||'—')}</span>`}
+function show(v,isError=false){msg.textContent=v;msg.className=isError?'notice error':'notice';msg.hidden=false}
+async function load(){const f=new FormData(document.getElementById('filters'));const q=new URLSearchParams({page,pageSize:20,...Object.fromEntries(f)});const x=await api('/api/interviews?'+q);lastItems=x.items;document.getElementById('total').textContent=x.totalCount;document.getElementById('active').textContent=x.items.filter(i=>['IN_PROGRESS','PROCESSING','PAUSED'].includes(i.sessionStatus)).length;document.getElementById('review').textContent=x.items.filter(i=>i.sessionStatus==='REVIEW_REQUIRED'||i.reportStatus==='REVIEW_REQUIRED').length;document.getElementById('list').innerHTML=x.items.length?`<table><thead><tr><th>候选人 / 岗位</th><th>题集</th><th>邀请</th><th>面试状态</th><th>结果</th><th>最后更新</th><th></th></tr></thead><tbody>${x.items.map(i=>`<tr><td><strong>${h(i.candidateName)}</strong><br><span class="muted">${h(i.jobName)}</span></td><td>${label(i.questionSetStatus)}<br><a href="/interviews/question-sets/${i.questionSetId}">#${i.questionSetId}</a></td><td>${label(i.invitationStatus)}<br><span class="muted">有效至 ${fmt(i.expireTime)}</span></td><td>${label(i.sessionStatus||'未开始')}</td><td>${i.overallScore==null?'—':`${i.overallScore} 分`}<br><span class="muted">${h(i.recommendation||'')}</span></td><td>${fmt(i.lastBusinessTime)}</td><td><div class="actions"><a class="button secondary" href="/interviews/${i.invitationId}">详情</a><button class="danger" onclick="deleteInvitation(${i.invitationId})">删除</button></div></td></tr>`).join('')}</tbody></table>`:'<div class="empty-state">暂无面试邀请。可先创建面试方案，再为候选人生成题集。</div>';const pages=Math.max(1,Math.ceil(x.totalCount/x.pageSize));document.getElementById('pager').innerHTML=`<button class="secondary" ${page<=1?'disabled':''} onclick="go(${page-1})">上一页</button><span>第 ${page} / ${pages} 页</span><button class="secondary" ${page>=pages?'disabled':''} onclick="go(${page+1})">下一页</button>`}
+async function deleteInvitation(id){const item=lastItems.find(x=>x.invitationId===id);if(!confirm(`确认删除 ${item?.candidateName||''} 的面试记录？\n\n删除后列表和候选人入口不再显示，录音、转写、报告及审计证据仍会保留。`))return;try{await api(`/api/interviews/invitations/${id}/delete`,{method:'POST'});show('面试记录已删除。');await load()}catch(e){show(e.message,true)}}
+function go(p){page=p;load().catch(e=>show(e.message,true))}document.getElementById('filters').onsubmit=e=>{e.preventDefault();page=1;load().catch(x=>show(x.message,true))};
+load().catch(e=>show(e.message,true));
+</script>}

@@ -1,0 +1,35 @@
+@{ ViewData["Title"]="候选人"; }
+<div class="page-head">
+  <div><h1>候选人</h1><p>所有HR共享候选人和简历。</p></div>
+  <form id="search" style="display:flex;align-items:center;gap:10px"><input id="keyword" style="width:262px" placeholder="姓名、手机或邮箱"><button>查询</button></form>
+</div>
+<div id="message" class="notice" hidden></div>
+<table>
+  <thead><tr><th>姓名</th><th>联系方式</th><th>学历/经验</th><th>匹配岗位</th><th>来源</th><th>状态</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+<div style="display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:16px"><button id="prev" class="secondary">上一页</button><span id="page-info"></span><button id="next" class="secondary">下一页</button></div>
+@section Scripts{<script>
+const msg=document.getElementById('message'),pageSize=10;
+let page=1,totalPages=1;
+function show(v){msg.textContent=v;msg.hidden=false}
+function h(v){const d=document.createElement('div');d.textContent=v;return d.innerHTML}
+function jobs(v){
+  const values=(v||'').split('、').map(x=>x.trim()).filter(Boolean);
+  return values.length?`<div class="job-tags">${values.map(x=>`<span class="job-tag">${h(x)}</span>`).join('')}</div>`:'-';
+}
+async function load(){
+  const q=encodeURIComponent(document.getElementById('keyword').value);
+  const data=await api(`/api/candidates?page=${page}&pageSize=${pageSize}&keyword=${q}`);
+  totalPages=Math.max(1,Math.ceil(data.totalCount/pageSize));
+  if(page>totalPages){page=totalPages;return load()}
+  document.getElementById('rows').innerHTML=data.items.map(x=>`<tr><td><a href="/candidates/${x.id}">${h(x.name)}</a></td><td>${h(x.phone||'')}<br>${h(x.email||'')}</td><td>${h(x.highestEducation||'-')} / ${x.totalExperienceMonths??'-'}个月</td><td class="candidate-jobs">${jobs(x.matchedJobs)}</td><td>${h(x.source||'-')}</td><td>${h(x.status)}</td></tr>`).join('')||'<tr><td colspan="6">暂无候选人。</td></tr>';
+  document.getElementById('page-info').textContent=`第 ${page} / ${totalPages} 页，共 ${data.totalCount} 人`;
+  document.getElementById('prev').disabled=page<=1;
+  document.getElementById('next').disabled=page>=totalPages;
+}
+document.getElementById('search').onsubmit=e=>{e.preventDefault();page=1;load().catch(x=>show(x.message))};
+document.getElementById('prev').onclick=()=>{if(page>1){page--;load().catch(x=>show(x.message))}};
+document.getElementById('next').onclick=()=>{if(page<totalPages){page++;load().catch(x=>show(x.message))}};
+load().catch(x=>show(x.message));
+</script>}

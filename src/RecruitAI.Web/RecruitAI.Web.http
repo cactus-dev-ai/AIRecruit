@@ -1,0 +1,6 @@
+@RecruitAI.Web_HostAddress = http://localhost:5034
+
+GET {{RecruitAI.Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

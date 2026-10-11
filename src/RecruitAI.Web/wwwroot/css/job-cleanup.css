@@ -1,0 +1,3 @@
+.job-limit { width: 112px; min-width: 96px; }
+.actions:has(.job-limit) { align-items: center; flex-wrap: wrap; }
+.actions:has(.job-limit) button { white-space: nowrap; }

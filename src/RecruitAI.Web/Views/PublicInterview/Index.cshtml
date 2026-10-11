@@ -1,0 +1,54 @@
+@{
+    Layout = null;
+}
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#133c55">
+  <title>AI 语音面试</title>
+  <link rel="stylesheet" href="/css/interview-h5.css" asp-append-version="true">
+  <script src="https://cdn.jsdelivr.net/npm/trtc-sdk-v5@5.19.2/trtc.js"></script>
+</head>
+<body>
+<main class="shell">
+  <header><span class="eyebrow">鑫可招聘 · 调试版</span><h1>AI 语音面试</h1><p>验证身份后，请在安静环境中完成麦克风检测和语音作答。</p></header>
+
+  <section id="verify-card" class="card">
+    <div class="steps"><b>1</b><span>身份验证</span></div>
+    <label>手机号码<input id="phone" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="请输入候选人手机号"></label>
+    <label>面试邀请码<input id="code" autocomplete="one-time-code" maxlength="8" placeholder="8 位邀请码" class="code"></label>
+    <button id="verify-button">验证并继续</button>
+    <p class="hint">调试阶段使用 HR 生成的 8 位邀请码；正式上线后可替换为微信公众号手机号授权。</p>
+  </section>
+
+  <section id="setup-card" class="card" hidden>
+    <div class="steps"><b>2</b><span>设备与授权</span></div>
+    <div class="identity"><strong id="candidate"></strong><span id="job"></span></div>
+    <div id="support" class="check">正在检测浏览器兼容性…</div>
+    <label class="consent"><input id="consent" type="checkbox"><span>我同意本次面试进行麦克风采集、云端录音、腾讯云语音识别及 AI 辅助报告处理。录音仅用于招聘评估。</span></label>
+    <button id="start-button">检测麦克风并开始</button>
+  </section>
+
+  <section id="question-card" class="card question" hidden>
+    <div class="question-meta"><span id="progress"></span><span id="timer">00:00</span></div>
+    <h2 id="question-text"></h2>
+    <p id="answer-state">请听题，准备好后开始回答。</p>
+    <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i></div>
+    <button id="record-button">开始回答</button>
+    <button id="next-button" class="secondary" hidden>下一题</button>
+    <div id="transcript" class="transcript" hidden></div>
+  </section>
+
+  <section id="report-card" class="card" hidden>
+    <div class="steps done"><b>✓</b><span>面试已提交</span></div>
+    <h2>调试报告已生成</h2><p id="report-summary"></p>
+    <dl><dt>报告状态</dt><dd id="report-status"></dd><dt>建议</dt><dd id="recommendation"></dd><dt>关注点</dt><dd id="concerns"></dd></dl>
+    <p class="hint">请联系 HR 在后台核对录音、转写和报告记录。</p>
+  </section>
+
+  <div id="toast" role="alert" hidden></div>
+</main>
+<script src="/js/interview-h5.js" asp-append-version="true"></script>
+</body></html>

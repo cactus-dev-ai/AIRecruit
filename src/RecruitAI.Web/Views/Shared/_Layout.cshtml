@@ -1,0 +1,115 @@
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var tokens = Antiforgery.GetAndStoreTokens(Context);
+    var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name;
+}
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="csrf-token" content="@tokens.RequestToken" />
+    <title>@ViewData["Title"] - RecruitAI</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/scoring.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/job-profile.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/interviews.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/imports-favorites.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/job-cleanup.css" asp-append-version="true" />
+</head>
+<body>
+<header class="site-header">
+    <a class="brand" href="/">RecruitAI</a>
+    <nav class="main-nav" aria-label="主导航">
+        <a href="/jobs">岗位</a>
+        <a href="/candidates">候选人</a>
+        <a href="/imports">简历导入</a>
+        <a href="/knowledge">知识库</a>
+        <a href="/scores">评分管理</a>
+        <a href="/favorites">简历收藏</a>
+        <a href="/interviews">AI语音面试</a>
+        <a href="/tasks">AI任务</a>
+        @if (User.IsInRole("ADMIN"))
+        {
+            <a href="/admin/users">用户管理</a>
+        }
+    </nav>
+    <div class="user-actions">
+        <span class="user" title="@displayName">@displayName</span>
+        <button class="link-button" type="button" onclick="openChangePassword()">修改密码</button>
+        <button class="link-button" type="button" onclick="logout()">退出</button>
+    </div>
+</header>
+<main class="@ViewData["MainClass"]">@RenderBody()</main>
+<dialog id="change-password-dialog" class="password-dialog" aria-labelledby="change-password-title">
+    <form id="change-password-form" method="dialog">
+        <div class="dialog-head">
+            <h2 id="change-password-title">修改密码</h2>
+            <button class="dialog-close" type="button" aria-label="关闭" onclick="closeChangePassword()">×</button>
+        </div>
+        <p class="muted">新密码须为 8–64 位，且同时包含字母和数字。修改后需要重新登录。</p>
+        <label>当前密码<input id="current-password" type="password" autocomplete="current-password" required /></label>
+        <label>新密码<input id="new-password" type="password" autocomplete="new-password" minlength="8" maxlength="64" required /></label>
+        <label>确认新密码<input id="confirm-password" type="password" autocomplete="new-password" minlength="8" maxlength="64" required /></label>
+        <p id="change-password-message" class="error" role="alert" hidden></p>
+        <div class="dialog-actions">
+            <button class="secondary" type="button" onclick="closeChangePassword()">取消</button>
+            <button id="change-password-submit" type="submit">确认修改</button>
+        </div>
+    </form>
+</dialog>
+<script>
+window.api = async function(url, options = {}) {
+  options.headers = Object.assign({'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content}, options.headers || {});
+  const response = await fetch(url, options);
+  if (!response.ok) { const error = await response.json().catch(() => ({message:`请求失败（HTTP ${response.status}）`})); throw new Error(error.message || error.code || `请求失败（HTTP ${response.status}）`); }
+  if (response.status === 204 || response.status === 205) return null;
+  const text = await response.text();
+  if (!text.trim()) return null;
+  try { return JSON.parse(text); }
+  catch { throw new Error(`服务器返回了无法识别的响应（HTTP ${response.status}）`); }
+};
+async function logout(){ await api('/api/auth/logout',{method:'POST'}); location.href='/login'; }
+const passwordDialog = document.getElementById('change-password-dialog');
+const passwordForm = document.getElementById('change-password-form');
+const passwordMessage = document.getElementById('change-password-message');
+
+function openChangePassword() {
+  passwordMessage.className = 'error';
+  passwordMessage.hidden = true;
+  passwordForm.reset();
+  passwordDialog.showModal();
+  document.getElementById('current-password').focus();
+}
+function closeChangePassword() { passwordDialog.close(); }
+passwordForm.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const currentPassword = document.getElementById('current-password').value;
+  const newPassword = document.getElementById('new-password').value;
+  const confirmPassword = document.getElementById('confirm-password').value;
+  if (newPassword !== confirmPassword) {
+    passwordMessage.className = 'error';
+    passwordMessage.textContent = '两次输入的新密码不一致。';
+    passwordMessage.hidden = false;
+    return;
+  }
+  const submit = document.getElementById('change-password-submit');
+  submit.disabled = true;
+  passwordMessage.hidden = true;
+  try {
+    await api('/api/auth/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword, newPassword }) });
+    passwordMessage.className = 'notice';
+    passwordMessage.textContent = '密码已修改，请重新登录。';
+    passwordMessage.hidden = false;
+    setTimeout(() => { location.href = '/login'; }, 900);
+  } catch (error) {
+    passwordMessage.className = 'error';
+    passwordMessage.textContent = error.message || '修改密码失败。';
+    passwordMessage.hidden = false;
+    submit.disabled = false;
+  }
+});
+</script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

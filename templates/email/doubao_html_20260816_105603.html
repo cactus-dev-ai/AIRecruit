@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!--
+  腾讯邮件通知模板登记：Template ID 57143
+  模板变量：CODE = 一次性补充验证码；CNAME = 小程序名称
+  RecruitAI映射：CODE <- fallbackCode；CNAME <- miniProgramName
+  当前状态：仅留档，邮件发送API后期启用
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面试通知</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f7fa;font-family:Microsoft YaHei,Helvetica,Arial,sans-serif;font-size:15px;color:#333;">
+<div style="max-width:620px;margin:30px auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e8e8e8;">
+    <div style="background:#2d68d2;padding:20px 24px;">
+        <h2 style="margin:0;color:#ffffff;font-size:18px;font-weight:normal;">面试参与通知</h2>
+    </div>
+    <div style="padding:24px;">
+        <p style="margin:0 0 16px 0;">您好！</p>
+        <p style="margin:0 0 16px 0;"><strong>浙江鑫可传动科技有限公司</strong>诚挚邀请您参加线上面试。</p>
+        <p style="margin:0 0 16px 0;">请使用微信访问小程序 <strong style="color:#2d68d2;">【{{CNAME}}】</strong> 参与本次面试。</p>
+        <p style="margin:0 0 16px 0;">进入小程序后优先通过手机号验证登录；<br>若手机号验证无法通过，请使用下方验证码：</p>
+        <div style="background:#f2f6ff;border-left:4px solid #2d68d2;padding:14px 16px;margin:20px 0;">
+            <p style="margin:0;font-size:16px;">访问验证码：<strong style="font-size:20px;letter-spacing:2px;color:#c82423;">{{CODE}}</strong></p>
+        </div>
+        <p style="margin:24px 0 8px 0;color:#666;font-size:14px;">温馨提示：</p>
+        <ul style="margin:0;padding-left:20px;color:#666;font-size:14px;">
+            <li>请提前打开微信搜索小程序名称【{{CNAME}}】；</li>
+            <li>面试开始前，请提前检查手机话筒、听筒是否可以正常使用；</li>
+            <li>验证码请勿转发他人，妥善保管；</li>
+            <li>建议选择网络稳定、安静的环境参与面试；</li>
+            <li>如遇访问、音频异常，可致电联系：0573-89379330。</li>
+        </ul>
+        <div style="margin-top:28px;padding-top:16px;border-top:1px solid #eee;color:#888;font-size:13px;">
+            本邮件为系统自动发送，请勿直接回复。
+        </div>
+    </div>
+</div>
+</body>
+</html>

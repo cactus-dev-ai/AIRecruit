@@ -1,0 +1,58 @@
+.manual-upload-dialog {
+    width: min(680px, calc(100% - 32px));
+}
+
+.manual-upload-dialog .dialog-body {
+    gap: 18px;
+}
+
+.manual-upload-dialog .dialog-body > p {
+    margin: 0;
+}
+
+.favorites-filter-bar {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dce4ef;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 0 0 18px;
+    box-shadow: 0 4px 16px #18385d0d;
+}
+
+.favorites-filter-bar label {
+    display: flex;
+    flex: 0 1 520px;
+    align-items: center;
+    gap: 12px;
+}
+
+.favorites-filter-bar label span {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.favorites-filter-bar select {
+    min-width: 260px;
+}
+
+@media (max-width: 700px) {
+    .favorites-filter-bar label {
+        flex: 1;
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .favorites-filter-bar select {
+        min-width: 0;
+    }
+
+    .manual-upload-dialog .dialog-actions {
+        flex-wrap: wrap;
+    }
+
+    .manual-upload-dialog .dialog-actions button {
+        flex: 1;
+    }
+}

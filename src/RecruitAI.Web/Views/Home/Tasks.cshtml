@@ -1,0 +1,51 @@
+@{ ViewData["Title"]="AI任务"; }
+<div class="page-head">
+  <div><h1>AI任务</h1><p>显示等待中和正在处理的任务，按创建时间正序执行；RESUME_PARSE 失败后自动放弃并清除该简历全部数据，不保留失败记录。</p></div>
+  <div class="actions">
+    <button id="start-worker" type="button">启动AI任务</button>
+    <button id="pause-worker" class="secondary" type="button">暂停AI任务</button>
+    <button id="cancel-all" class="danger" type="button" disabled>一键取消所有任务</button>
+    <button id="clear-failed" class="danger" type="button">一键清除所有失败任务</button>
+    <button id="refresh" class="secondary" type="button">刷新</button>
+  </div>
+</div>
+<p id="worker-state" class="muted">正在检查 Agent 状态…</p>
+<div id="message" class="notice" hidden></div>
+<table><thead><tr><th>ID</th><th>类型</th><th>状态</th><th>次数</th><th>失败原因</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="rows"></tbody></table>
+<div class="actions pager"><button id="previous" class="secondary" type="button">上一页</button><span id="page-info" class="muted"></span><button id="next" class="secondary" type="button">下一页</button></div>
+<dialog id="task-detail" class="password-dialog"><form method="dialog"><div class="dialog-head"><h2>AI任务详情</h2><button class="dialog-close" type="button" onclick="closeDetail()">×</button></div><div id="task-detail-body"></div><div id="task-detail-actions" class="dialog-actions"></div></form></dialog>
+@section Scripts{<script>
+const msg=document.getElementById('message');let page=1,loading=false,workerPaused=false;
+function show(v){msg.textContent=v;msg.hidden=false}
+function clearMessage(){msg.hidden=true;msg.textContent=''}
+async function load(){
+  if(loading)return; loading=true;document.getElementById('refresh').disabled=true;
+  try{
+    const [data,worker]=await Promise.all([api(`/api/ai-tasks?page=${page}&pageSize=10&status=ACTIVE`),api('/api/ai-tasks/worker')]);
+    page=data.page;document.getElementById('rows').innerHTML=data.items.map(x=>`<tr><td>${x.id}</td><td>${x.taskType}</td><td>${statusName(x.status)}</td><td>${x.retryCount}/${x.maxRetryCount}</td><td class="error-summary">${h(x.errorMessage||'-')}</td><td>${new Date(x.createTime+'Z').toLocaleString()}</td><td><button type="button" class="secondary" onclick="detail(${x.id})">查看详情</button>${x.status==='WAITING'?` <button type="button" onclick="act(${x.id},'cancel')">取消</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7">当前没有待执行或失败任务</td></tr>';
+    const pages=Math.max(1,Math.ceil(data.totalCount/data.pageSize));document.getElementById('page-info').textContent=`第 ${data.page} / ${pages} 页，共 ${data.totalCount} 条待执行`;
+    document.getElementById('previous').disabled=data.page<=1;document.getElementById('next').disabled=data.page>=pages;
+    document.getElementById('worker-state').textContent=!worker.serviceOnline?'Python Agent 服务未启动':worker.running?'Python Agent 正在运行':'Python Agent 已暂停';
+    document.getElementById('start-worker').disabled=!worker.serviceOnline&&false||worker.running;document.getElementById('pause-worker').disabled=!worker.running;
+    workerPaused=worker.serviceOnline&&!worker.running;document.getElementById('cancel-all').disabled=!workerPaused;
+  }catch(x){show(x.message)}finally{loading=false;document.getElementById('refresh').disabled=false;}
+}
+document.getElementById('refresh').addEventListener('click',()=>{clearMessage();load();});
+document.getElementById('previous').onclick=()=>{if(page>1){page--;load();}};
+document.getElementById('next').onclick=()=>{page++;load();};
+async function act(id,a){try{await api(`/api/ai-tasks/${id}/${a}`,{method:'POST'});await load()}catch(x){show(x.message)}}
+function h(v){const d=document.createElement('div');d.textContent=v;return d.innerHTML}
+function statusName(v){return v==='RUNNING'?'正在处理':v==='WAITING'?'等待中':v==='FAILED'?'失败':v==='CANCELLED'?'已取消':v}
+async function detail(id){try{const x=await api(`/api/ai-tasks/${id}`);const fields=[['任务',`${x.id} / ${x.taskType}`],['状态',statusName(x.status)],['失败原因',x.errorMessage||'—'],['候选人',x.candidateName||'—'],['人才ID',x.talentId||'—'],['简历文件',x.resumeFileName||'—'],['正文长度',x.resumeTextLength??'—'],['影响简历数',x.affectedResumeCount]];document.getElementById('task-detail-body').innerHTML=`<dl class="profile-grid">${fields.map(v=>`<dt>${h(v[0])}</dt><dd>${h(v[1])}</dd>`).join('')}</dl>${x.resumeTextPreview?`<h3>简历正文片段</h3><pre class="raw-text">${h(x.resumeTextPreview)}</pre>`:''}`;const buttons=[];if(x.canRetry)buttons.push(`<button type="button" onclick="retryTask(${x.id})">继续重试</button>`);if(x.canPurge)buttons.push(`<button type="button" class="danger" onclick="purgeTask(${x.id},${x.purgeDeletesCandidate},${x.affectedResumeCount})">${x.purgeDeletesCandidate?'清除人才和简历':'清除任务'}</button>`);buttons.push('<button type="button" class="secondary" onclick="closeDetail()">关闭</button>');document.getElementById('task-detail-actions').innerHTML=buttons.join('');document.getElementById('task-detail').showModal()}catch(x){show(x.message)}}
+function closeDetail(){document.getElementById('task-detail').close()}
+async function retryTask(id){try{await api(`/api/ai-tasks/${id}/retry`,{method:'POST'});closeDetail();show('任务已重新进入队列。');await load()}catch(x){show(x.message)}}
+async function purgeTask(id,deletesCandidate,count){const text=deletesCandidate?`确认放弃该人才并永久清除其全部 ${count} 份简历、岗位关系、结构化资料和AI任务吗？此操作不可恢复。`:'确认永久清除该任务吗？';if(!confirm(text))return;try{await api(`/api/ai-tasks/${id}/purge`,{method:'POST'});closeDetail();show('已清除。');await load()}catch(x){show(x.message)}}
+async function control(action){try{clearMessage();await api(`/api/ai-tasks/worker/${action}`,{method:'POST'});show(action==='start'?'Python Agent 已启动，最多同时处理10个任务。':'Python Agent 正在暂停；当前处理任务全部结束后，才可一键取消等待任务。');await load()}catch(x){show(x.message)}}
+async function cancelAll(){if(!workerPaused){show('请先暂停AI任务，并等待当前处理任务全部结束。');return}if(!confirm('确认取消全部等待中的AI任务吗？已完成和失败任务不会被删除。'))return;try{const r=await api('/api/ai-tasks/cancel-all',{method:'POST'});show(`已取消 ${r.cancelled} 个等待中的AI任务。`);page=1;await load()}catch(x){show(x.message)}}
+async function clearFailed(){if(!confirm('确认清除全部失败AI任务吗？评分历史中的失败状态会保留；如存在简历解析失败任务，将同时清除对应的无效人才和简历。此操作不可恢复。'))return;try{const r=await api('/api/ai-tasks/clear-failed',{method:'POST'});show(`已清除 ${r.cleared} 个失败任务。`);page=1;await load()}catch(x){show(x.message)}}
+document.getElementById('start-worker').addEventListener('click',()=>control('start'));
+document.getElementById('pause-worker').addEventListener('click',()=>control('pause'));
+document.getElementById('cancel-all').addEventListener('click',cancelAll);
+document.getElementById('clear-failed').addEventListener('click',clearFailed);
+setInterval(()=>load(),3000);load();
+</script>}

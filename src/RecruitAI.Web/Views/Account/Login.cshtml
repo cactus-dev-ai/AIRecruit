@@ -1,0 +1,5 @@
+@model string
+@{ Layout = null; ViewData["Title"] = "登录"; }
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>RecruitAI 登录</title><link rel="stylesheet" href="/css/site.css"></head>
+<body class="login-body"><form method="post" class="login-card"><h1>RecruitAI</h1><p class="muted">AI 智能招聘筛选系统</p>@Html.AntiForgeryToken()<input type="hidden" name="returnUrl" value="@Model" />
+<div asp-validation-summary="All" class="error"></div><label>用户名<input name="userName" maxlength="100" required autofocus /></label><label>密码<input name="password" type="password" required /></label><button type="submit">登录</button></form></body></html>

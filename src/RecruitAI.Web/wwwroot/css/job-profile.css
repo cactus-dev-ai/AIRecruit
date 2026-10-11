@@ -1,0 +1,66 @@
+.job-profile-panel {
+    display: block;
+    align-items: initial;
+}
+
+.job-profile-panel > label {
+    display: grid;
+    width: 100%;
+    margin-top: 16px;
+}
+
+.job-profile-panel textarea {
+    min-height: 320px;
+    resize: vertical;
+}
+
+.job-profile-panel .actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+@media (max-width: 700px) {
+    .job-profile-panel .actions button {
+        flex: 1 1 160px;
+    }
+}
+
+.merge-job-panel {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) minmax(320px, 2fr) auto;
+    align-items: end;
+    gap: 16px;
+}
+
+.merge-job-intro {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 16px;
+}
+
+.merge-job-intro h2,
+.merge-job-intro p {
+    margin: 0;
+}
+
+.merge-job-panel > button {
+    white-space: nowrap;
+}
+
+@media (max-width: 850px) {
+    .merge-job-panel,
+    .merge-job-intro {
+        grid-template-columns: 1fr;
+    }
+
+    .merge-job-intro {
+        grid-column: auto;
+    }
+
+    .merge-job-panel > button {
+        width: 100%;
+    }
+}
